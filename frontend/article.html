@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Full Article - NewsSphere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f2f2f2;
+    }
+
+    header {
+      background-color: #d71920;
+      color: white;
+      padding: 0px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 a {
+      color: white;
+      text-decoration: none;
+    }
+
+    header h1 a:hover {
+      text-decoration: underline;
+    }
+
+    .article-container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .article-image {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .article-title {
+      margin: 20px 0 10px;
+      font-size: 26px;
+      font-weight: bold;
+      color: #222;
+    }
+
+    .article-content {
+      margin-top: 20px;
+      line-height: 1.7;
+      font-size: 17px;
+      color: #444;
+    }
+
+    .article-author {
+      color: #999;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .button-row a {
+      text-decoration: none;
+      color: #d71920;
+      font-weight: bold;
+      font-size: 15px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #f9f9f9;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+
+    .button-row a:hover {
+      background: #f1f1f1;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 20px;
+      }
+
+      .button-row {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .button-row a {
+        text-align: center;
+      }
+    }
+  </style>
+  <link rel="Stylesheet" href="/static/style.css">
+</head>
+<body>
+
+ 
+  <header>
+    <h1><a href="/">🗞️ NewsSphere</a></h1>
+    <span>Top Headlines</span>
+  </header>
+
+  <!-- Main Navigation -->
+  <nav class="second-navbar">
+    <a href="#" onclick="fetchNews('general', this)">Home</a>
+    <a href="#" onclick="fetchNews('india', this)">India</a>
+    <a href="#" onclick="fetchNews('world', this)">World</a>
+    <a href="#" onclick="fetchNews('sports', this)">Sports</a>
+    <a href="#" onclick="fetchNews('technology', this)">Technology</a>
+    <a href="#" onclick="fetchNews('entertainment', this)">Entertainment</a>
+    <a href="#" onclick="fetchNews('business', this)">Business</a>
+    <a href="#" onclick="fetchNews('health', this)">Health</a>
+  </nav>
+
+  
+  <div class="article-container">
+    <img id="article-image" class="article-image" src="" alt="Article Image">
+    <h1 id="article-title" class="article-title"></h1>
+    <p class="article-author" id="article-author"></p>
+    <p id="article-content" class="article-content"></p>
+
+    <div class="button-row">
+      <a href="/" class="back-btn">← Back to News</a>
+      <a id="full-link" class="full-link" href="#" target="_blank">Read full article on original site →</a>
+    </div>
+  </div>
+
+  
+  <footer>
+    &copy; 2025 NewsSphere | Powered by Aditya Pachkor
+  </footer>
+
+  
+  <script>
+    const article = JSON.parse(localStorage.getItem("selectedArticle"));
+
+    if (article) {
+      document.getElementById("article-title").innerText = article.title || "No Title";
+      document.getElementById("article-image").src = article.urlToImage || "https://via.placeholder.com/800x400";
+      document.getElementById("article-author").innerText = article.source?.name || "Unknown Source";
+      document.getElementById("article-content").innerText = article.content || article.description || "No content available.";
+      document.getElementById("full-link").href = article.url || "#";
+    } else {
+      document.querySelector('.article-container').innerHTML = "<p>Article not found.</p>";
+    }
+  </script>
+
+  
+  <script>
+    function fetchNews(category = 'general', btn = null) {
+      // Save selected category
+      localStorage.setItem('selectedCategory', category);
+
+      
+      if (btn) {
+        document.querySelectorAll('.second-navbar a').forEach(a => a.classList.remove('active'));
+        btn.classList.add('active');
+      } else {
+        document.querySelectorAll('.second-navbar a').forEach(a => {
+          if (a.innerText.toLowerCase() === category) {
+            a.classList.add('active');
+          }
+        });
+      }
+
+      // Navigate to homepage with category
+      window.location.href = `/?category=${category}`;
+    }
+
+    // Reload previous category
+    window.onload = () => {
+      const saved = localStorage.getItem('selectedCategory') || 'general';
+      document.querySelectorAll('.second-navbar a').forEach(a => {
+        if (a.innerText.toLowerCase() === saved) {
+          a.classList.add('active');
+        }
+      });
+    };
+  </script>
+</body>
+</html>
