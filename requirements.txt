@@ -2,6 +2,3 @@ flask
 requests
 flask_cors
 gunicorn
-random
-smtplib
-MIMEText
