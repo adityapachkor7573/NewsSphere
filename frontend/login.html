@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - NewsSphere</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+  <h1><a href="/">🗞️ NewsSphere</a></h1>
+</header>
+
+<div class="container" style="max-width: 500px; margin: 40px auto;">
+  <h2>Login</h2>
+
+  {% if error %}
+    <p style="color:red;">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST">
+    <input type="text" name="username" placeholder="Username" required class="input-field"><br><br>
+    <input type="password" name="password" placeholder="Password" required class="input-field"><br><br>
+    <button type="submit" class="btn">Login</button>
+  </form>
+
+  <div style="text-align:center; margin-top: 20px;">
+    <p>Don't have an account?</p>
+    <a href="/register" class="btn" style="background-color: #eee; color: #d71920;">Register Now</a>
+  </div>
+
+  <div style="text-align:center; margin-top: 20px;">
+    <p>Are you an admin?</p>
+    <a href="{{ url_for('admin_login') }}" class="btn" style="background-color: #222; color: white;">Admin Login</a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 NewsSphere | Powered by Aditya Pachkor
+</footer>
+
+</body>
+</html>

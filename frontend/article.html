@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Full Article - NewsSphere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+  <h1><a href="/">🗞️ NewsSphere</a></h1>
+  <span>Top Headlines</span>
+</header>
+
+<!-- Second Navbar -->
+<nav class="second-navbar">
+  <span id="menuToggle" class="menu-icon">☰</span>
+  <a href="#" onclick="fetchNews('general', this)">Home</a>
+  <a href="#" onclick="fetchNews('india', this)">India</a>
+  <a href="#" onclick="fetchNews('world', this)">World</a>
+  <a href="#" onclick="fetchNews('sports', this)">Sports</a>
+  <a href="#" onclick="fetchNews('technology', this)">Technology</a>
+  <a href="#" onclick="fetchNews('entertainment', this)">Entertainment</a>
+  <a href="#" onclick="fetchNews('business', this)">Business</a>
+  <a href="#" onclick="fetchNews('health', this)">Health</a>
+</nav>
+
+<!-- Sidebar -->
+<div id="sideMenu" class="side-menu">
+  <a href="#" onclick="fetchNews('general', this)">Home</a>
+  <a href="#" onclick="fetchNews('india', this)">India</a>
+  <a href="#" onclick="fetchNews('world', this)">World</a>
+  <a href="#" onclick="fetchNews('sports', this)">Sports</a>
+  <a href="#" onclick="fetchNews('technology', this)">Technology</a>
+  <a href="#" onclick="fetchNews('entertainment', this)">Entertainment</a>
+  <a href="#" onclick="fetchNews('business', this)">Business</a>
+  <a href="#" onclick="fetchNews('health', this)">Health</a>
+  <a href="#" onclick="fetchistory('activity',this)">Activity</a>
+  <span id="sidebar-user-info"></span>
+</div>
+
+<div class="article-container">
+  <img id="article-image" class="article-image" src="" alt="Article Image">
+  <h1 id="article-title" class="article-title"></h1>
+  <p class="article-author" id="article-author"></p>
+  <p id="article-content" class="article-content"></p>
+  <p><strong>Bias:</strong> {{ bias | capitalize }}</p>
+
+  <div class="button-row">
+    <a href="/" class="back-btn">← Back to News</a>
+    <a id="full-link" class="full-link" href="#" target="_blank">Read full article on original site →</a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 NewsSphere | Powered by Aditya Pachkor
+</footer>
+
+<!-- Scripts -->
+<script>
+  // Display selected article
+  const article = JSON.parse(localStorage.getItem("selectedArticle"));
+  if (article) {
+    document.getElementById("article-title").innerText = article.title || "No Title";
+    document.getElementById("article-image").src = article.urlToImage || "https://via.placeholder.com/800x400";
+    document.getElementById("article-author").innerText = article.source?.name || "Unknown Source";
+    document.getElementById("article-content").innerText = article.content || article.description || "No content available.";
+    document.getElementById("full-link").href = article.url || "#";
+  } else {
+    document.querySelector('.article-container').innerHTML = "<p>Article not found.</p>";
+  }
+
+  // Fetch news and store selected category
+  function fetchNews(category = 'general', btn = null) {
+    localStorage.setItem('selectedCategory', category);
+    if (btn) {
+      document.querySelectorAll('.second-navbar a').forEach(a => a.classList.remove('active'));
+      btn.classList.add('active');
+    } else {
+      document.querySelectorAll('.second-navbar a').forEach(a => {
+        if (a.innerText.toLowerCase() === category) a.classList.add('active');
+      });
+    }
+    window.location.href = `/?category=${category}`;
+  }
+
+  // On load: set active category and sidebar user info
+  window.onload = () => {
+    // Set active category
+    const savedCategory = localStorage.getItem('selectedCategory') || 'general';
+    document.querySelectorAll('.second-navbar a').forEach(a => {
+      if (a.innerText.toLowerCase() === savedCategory) a.classList.add('active');
+    });
+
+    // Populate sidebar user info
+    const userInfo = localStorage.getItem('userInfo');
+    document.getElementById('sidebar-user-info').innerHTML = userInfo || '<a href="/login">Login</a>';
+  };
+</script>
+
+<script src="/static/sidebar.js"></script>
+
+</body>
+</html>
