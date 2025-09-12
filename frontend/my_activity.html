@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Activity - NewsSphere</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; margin: 0; padding: 0; }
+    header { background-color: #d71920; color: #fff; padding: 15px 20px; text-align: center; }
+    header h1 { margin: 0; font-size: 24px; }
+    header p { margin: 5px 0 0; font-size: 16px; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+    .section { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+    h2, h3 { color: #d71920; text-align: center; margin-bottom: 15px; }
+    .account-info p { font-size: 16px; margin: 5px 0; text-align: center; }
+    .highlight { font-weight: bold; color: #d71920; }
+
+    .tiles-container { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+    .tile { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); overflow: hidden; width: 250px; cursor: pointer; transition: transform 0.2s; }
+    .tile:hover { transform: translateY(-5px); }
+    .tile img { width: 100%; height: 140px; object-fit: cover; }
+    .tile-content { padding: 10px; }
+    .tile-content p { margin: 5px 0; font-size: 14px; }
+    .tile-content .article-title { font-weight: bold; color: #d71920; font-size: 16px; }
+
+    /* Responsive */
+    @media (max-width: 768px) { .tile { width: 45%; } }
+    @media (max-width: 480px) { .tile { width: 100%; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>My Activity Dashboard</h1>
+  <p>Welcome, <span class="highlight">{{ username or 'User' }}</span></p>
+</header>
+
+<div class="container">
+
+  <div class="section account-info">
+    <h3>Account Activity</h3>
+    <p><span class="highlight">Last Login:</span> {{ last_login or 'N/A' }}</p>
+  </div>
+
+  <div class="section">
+    <h3>Last Article Viewed</h3>
+    {% if last_article %}
+      <div class="tiles-container">
+        <div class="tile">
+          <img src="{{ last_article[3] or 'https://via.placeholder.com/250x140' }}" alt="Article">
+          <div class="tile-content">
+            <p class="article-title">{{ last_article[0] }}</p>
+            <p>Viewed At: {{ last_article[1] }}</p>
+            <p>Time Spent: {{ last_article[2] }} sec</p>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p>No article viewed yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h3>All Article Views</h3>
+    {% if all_articles %}
+      <div class="tiles-container">
+        {% for article in all_articles %}
+          <div class="tile">
+            <img src="{{ article[3] or 'https://via.placeholder.com/250x140' }}" alt="Article">
+            <div class="tile-content">
+              <p class="article-title">{{ article[0] }}</p>
+              <p>Viewed At: {{ article[1] }}</p>
+              <p>Time Spent: {{ article[2] }} sec</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No article history available.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+</body>
+</html>
