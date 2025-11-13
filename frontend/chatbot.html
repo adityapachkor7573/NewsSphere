@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsSphere Chatbot</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #d71920;
+      color: white;
+      padding: 15px 30px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+      overflow: hidden;
+    }
+
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .user-msg, .bot-msg {
+      margin: 10px 0;
+      line-height: 1.4;
+    }
+
+    .user-msg {
+      text-align: right;
+    }
+
+    .user-msg span {
+      background-color: #d71920;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 20px 20px 0 20px;
+      display: inline-block;
+      max-width: 75%;
+    }
+
+    .bot-msg span {
+      background-color: #f0f0f0;
+      color: #333;
+      padding: 10px 14px;
+      border-radius: 20px 20px 20px 0;
+      display: inline-block;
+      max-width: 75%;
+    }
+
+    .input-area {
+      display: flex;
+      border-top: 1px solid #ccc;
+      padding: 10px;
+      background-color: #fafafa;
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    button {
+      background-color: #d71920;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      margin-left: 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #b9151b;
+    }
+
+    .loading {
+      text-align: center;
+      color: gray;
+      font-size: 14px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>🧠 NewsSphere Chatbot</header>
+
+  <div class="chat-container">
+    <div id="chatBox" class="chat-box">
+      <div class="bot-msg"><span>Hello 👋, I'm your NewsSphere Assistant! How can I help you today?</span></div>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Type your message..." onkeydown="if(event.key==='Enter') sendMessage()" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const userMessage = document.getElementById("userInput").value.trim();
+      if (!userMessage) return;
+
+      const chatBox = document.getElementById("chatBox");
+      chatBox.innerHTML += `<div class='user-msg'><span>${userMessage}</span></div>`;
+      document.getElementById("userInput").value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // show typing...
+      const loader = document.createElement("div");
+      loader.className = "loading";
+      loader.textContent = "Bot is typing...";
+      chatBox.appendChild(loader);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await response.json();
+        loader.remove();
+
+        chatBox.innerHTML += `<div class='bot-msg'><span>${data.response}</span></div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (error) {
+        loader.remove();
+        chatBox.innerHTML += `<div class='bot-msg'><span>⚠️ Something went wrong. Please try again later.</span></div>`;
+      }
+    }
+  </script>
+</body>
+</html>

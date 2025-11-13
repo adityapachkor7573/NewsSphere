@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ article.title }} - NewsSphere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .article-container { max-width:900px; margin:40px auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+    .article-title { font-size:2rem; margin-bottom:15px; }
+    .article-author { font-size:0.95rem; color:#555; margin-bottom:20px;}
+    .article-content p { font-size:1.1rem; line-height:1.7; color:#444; margin-bottom:20px; }
+    .article-img { display:block; max-width:58%; margin:30px auto; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,0.2); }
+    .article-img:hover {transform: scale(1.05);box-shadow: 0 6px 15px rgba(0,0,0,0.3);}
+    .button-row a { display:inline-block; margin-right:15px; padding:8px 12px; border-radius:6px; text-decoration:none; background:#1e3c72; color:white; transition:0.2s; }
+    .button-row a:hover { background:#14375b; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><a href="/">🗞️ NewsSphere</a></h1>
+  <span>Top Headlines</span>
+</header>
+
+<!-- Second Navbar -->
+<nav class="second-navbar">
+  <span id="menuToggle" class="menu-icon">☰</span>
+  <a href="#" onclick="fetchNews('general', this)">Home</a>
+  <a href="#" onclick="fetchNews('india', this)">India</a>
+  <a href="#" onclick="fetchNews('world', this)">World</a>
+  <a href="#" onclick="fetchNews('sports', this)">Sports</a>
+  <a href="#" onclick="fetchNews('technology', this)">Technology</a>
+  <a href="#" onclick="fetchNews('entertainment', this)">Entertainment</a>
+  <a href="#" onclick="fetchNews('business', this)">Business</a>
+  <a href="#" onclick="fetchNews('health', this)">Health</a>
+
+  <form id="search-form" class="nav-search">
+    <input type="text" id="search-input" placeholder="Search news...">
+    <button type="submit">🔍</button>
+  </form>
+
+  <span id="current-date" class="nav-date"></span>
+  <div style="margin-top:25px;">
+  <!-- <label for="lang-select" style="font-weight:600; color:#fff; display:flex;">🌐 Translate to:</label> -->
+  <select id="lang-select">
+    <option value="en">English</option>
+    <option value="hi">Hindi</option>
+    <option value="mr">Marathi</option>
+    <option value="ta">Tamil</option>
+    <option value="kn">Kannada</option>
+    <option value="ml">Malayalam</option>
+    <option value="gu">Gujarati</option>
+    <option value="fr">French</option>
+    <option value="es">Spanish</option>
+    <option value="de">German</option>
+  </select>
+</div>
+
+</nav>
+
+<!-- Sidebar -->
+<div id="sideMenu" class="side-menu">
+  <a href="#" onclick="fetchNews('general', this)">Home</a>
+  <a href="#" onclick="fetchNews('india', this)">India</a>
+  <a href="#" onclick="fetchNews('world', this)">World</a>
+  <a href="#" onclick="fetchNews('sports', this)">Sports</a>
+  <a href="#" onclick="fetchNews('technology', this)">Technology</a>
+  <a href="#" onclick="fetchNews('entertainment', this)">Entertainment</a>
+  <a href="#" onclick="fetchNews('business', this)">Business</a>
+  <a href="#" onclick="fetchNews('health', this)">Health</a>
+  {% if session.user %}
+      <a href="{{ url_for('activity.my_activity') }}">My Activity</a>
+  {% else %}
+      <a href="{{ url_for('login', next=url_for('activity.my_activity')) }}">My Activity</a>
+  {% endif %}
+  <span id="sidebar-user-info"></span>
+</div>
+
+<div class="article-container">
+  <h1 class="article-title" data-original="{{ article.title }}">{{ article.title }}</h1>
+<p class="article-author" data-original="{{ article.source_name or "Unknown Source" }}">
+  {{ article.source_name or "Unknown Source" }}
+</p>
+
+ 
+  {% set paragraphs = article.content %}
+  {% set images = article.images %}
+  {% set total_imgs = images|length %}
+  {% set total_paras = paragraphs|length %}
+  {% set interval = total_paras // total_imgs if total_imgs > 0 else 0 %}
+
+ {% for para in paragraphs %}
+  <p class="article-content" data-original="{{ para }}">{{ para }}</p>
+
+  {% if interval > 0 and (loop.index0 + 1) % interval == 0 and (loop.index0 // interval) < total_imgs %}
+    <img src="{{ images[loop.index0 // interval] }}" class="article-img" alt="Article Image">
+  {% endif %}
+{% endfor %}
+
+
+  <p><strong>Bias:</strong> {{ bias | capitalize }}</p>
+
+  <div class="button-row">
+    <a href="/" class="back-btn">← Back to News</a>
+    <!-- 🔘 Compare Button -->
+<button id="compareBtn" class="compare-btn">Compare with Other Platforms</button>
+<!-- 📰 Comparison Results -->
+<div id="compareResults"></div>
+    <a id="full-link" class="full-link" href="{{ article.url }}" target="_blank">Read full article on original site →</a>
+  </div>
+</div>
+
+
+<script>
+document.getElementById("compareBtn").addEventListener("click", async () => {
+    const title = document.querySelector(".article-title").innerText;
+    const resultsDiv = document.getElementById("compareResults");
+    
+    resultsDiv.innerHTML = "<p>🔍 Searching for similar articles...</p>";
+
+    try {
+        const response = await fetch("/compare", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: title })
+        });
+
+        const data = await response.json();
+        console.log("Compare API Response:", data); // debug log
+
+        if (data.message) {
+            resultsDiv.innerHTML = `<p>${data.message}</p>`;
+            return;
+        }
+
+        if (data.length === 0) {
+            resultsDiv.innerHTML = `<p>No similar articles found.</p>`;
+            return;
+        }
+
+        let html = `
+            <h3>📰 Similar Articles from Other Platforms</h3>
+            <div class="compare-list">
+        `;
+
+        data.forEach(article => {
+            let biasClass = "bias-unknown";
+            if (article.bias.toLowerCase() === "left") biasClass = "bias-left";
+            else if (article.bias.toLowerCase() === "center") biasClass = "bias-center";
+            else if (article.bias.toLowerCase() === "right") biasClass = "bias-right";
+
+            html += `
+                <div class="compare-article">
+                    <h4>${article.title}</h4>
+                    <p>${article.description || ""}</p>
+                    <p><strong>Source:</strong> ${article.source} 
+                       <span class="bias-label ${biasClass}">${article.bias}</span>
+                    </p>
+                    <a href="${article.url}" target="_blank" class="full-link">Read Full</a>
+                </div>
+            `;
+        });
+
+        html += "</div>";
+        resultsDiv.innerHTML = html;
+
+    } catch (error) {
+        console.error("Error fetching comparison:", error);
+        resultsDiv.innerHTML = `<p style="color:red;">⚠️ Error fetching comparison data.</p>`;
+    }
+});
+</script>
+
+
+<footer>
+  &copy; 2025 NewsSphere | Powered by Aditya Pachkor
+</footer>
+<script src="/static/sidebar.js"></script>
+
+
+<script>
+async function translateArticle(lang) {
+  const titleEl = document.querySelector('.article-title');
+  const authorEl = document.querySelector('.article-author');
+  const paragraphs = document.querySelectorAll('.article-content');
+
+  const elements = [titleEl, authorEl, ...paragraphs];
+
+  for (let el of elements) {
+    if (!el) continue;
+
+    const original = el.dataset.original || el.innerText;
+    if (!el.dataset.original) el.dataset.original = original;
+
+    el.innerText = "⏳ Translating...";
+
+    try {
+      const res = await fetch("/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: original, lang })
+      });
+      const data = await res.json();
+      el.innerText = data.translated_text || original;
+    } catch (err) {
+      console.error("Translation error:", err);
+      el.innerText = original;
+    }
+  }
+}
+
+// Dropdown listener
+const dropdown = document.getElementById('lang-select');
+if (dropdown) {
+  dropdown.addEventListener('change', (e) => translateArticle(e.target.value));
+}
+</script>
+
+<!-- Floating Assistant Button -->
+<div id="chatbot-toggle">💬</div>
+
+<!-- Chatbot Container (Hidden by Default) -->
+<div id="chatbot-container" class="hidden">
+  <div id="chatbot-header">
+    <h3>NewsSphere Assistant</h3>
+    <button id="chatbot-close">✖</button>
+  </div>
+
+  <div id="chat-messages" class="chat-box">
+    <div class="bot-msg">👋 Hello! I'm your NewsSphere Assistant. How can I help you today?</div>
+  </div>
+
+  <!-- Quick Option Tiles -->
+  <div id="quick-options">
+    <button data-option="report">📢 Report Issue</button>
+    <button data-option="contact">📞 Contact Support</button>
+    <button data-option="help">💡 Help</button>
+    <button data-option="about">ℹ️ About</button>
+  </div>
+
+  <!-- Chat Footer -->
+  <div id="chatbot-footer">
+    <input id="chat-input" type="text" placeholder="Type your message..." />
+    <div id="footer-buttons">
+      <button id="menu-btn" title="Show Quick Options">☰</button>
+    </div>
+    <button id="send-btn">➤</button>
+  </div>
+</div>
+
+<script>
+const toggleBtn = document.getElementById("chatbot-toggle");
+const chatbotContainer = document.getElementById("chatbot-container");
+const closeBtn = document.getElementById("chatbot-close");
+const sendBtn = document.getElementById("send-btn");
+const input = document.getElementById("chat-input");
+const messages = document.getElementById("chat-messages");
+const quickOptions = document.getElementById("quick-options");
+const menuBtn = document.getElementById("menu-btn");
+
+// Initially hidden
+chatbotContainer.classList.remove("show");
+
+// Open chatbot
+toggleBtn.addEventListener("click", () => {
+  chatbotContainer.classList.add("show");
+});
+
+// Close chatbot
+closeBtn.addEventListener("click", () => {
+  chatbotContainer.classList.remove("show");
+});
+
+// Reset chatbot session on page load
+window.addEventListener("load", async () => {
+  try {
+    await fetch("/chatbot/reset", { method: "POST" });
+  } catch (err) {
+    console.error("Error resetting chatbot:", err);
+  }
+});
+
+// Send message
+sendBtn.addEventListener("click", async () => {
+  const msg = input.value.trim();
+  if (!msg) return;
+  messages.innerHTML += `<div class="user-msg">${msg}</div>`;
+  input.value = "";
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const res = await fetch("/chatbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg }),
+    });
+    const data = await res.json();
+    messages.innerHTML += `<div class="bot-msg">${data.reply}</div>`;
+  } catch {
+    messages.innerHTML += `<div class="bot-msg error">⚠️ Error connecting to bot.</div>`;
+  }
+
+  messages.scrollTop = messages.scrollHeight;
+});
+
+// Quick Option Buttons
+document.querySelectorAll("#quick-options button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const option = btn.dataset.option;
+    let reply = "";
+
+    if (option === "report") reply = "📝 What issue are you facing? Please describe it.";
+    else if (option === "contact") reply = "📬 Need to reach us? We’re always happy to help! 💬\n\n🏢 NewsSphere Support Team\n📧 Email: support@newssphere.com\n\n🌐 Website: www.newssphere.com\n\n🕒 Support Hours: Monday–Saturday, 9:00 AM – 7:00 PM\n\nYou can describe your issue here, and we’ll forward it directly to our admin team for quick resolution.";
+    else if (option === "help") reply = "💡 I’m here to help! You can ask me about:\n📰 Latest News \n⚙️ Reporting Issues \n📞 Contact Support \nℹ️ About NewsSphere \n\nJust choose an option or type your question!";
+    else if (option === "about") reply = "ℹ️ I'm the NewsSphere Assistant! \n\nNewsSphere is a smart AI-powered news platform created by Aditya Pachkor. \n\nI help you explore the latest and unbiased news from India and around the world!";
+
+    messages.innerHTML += `<div class="user-msg">${btn.textContent}</div>`;
+    messages.innerHTML += `<div class="bot-msg">${reply}</div>`;
+    quickOptions.style.display = "none";
+    messages.scrollTop = messages.scrollHeight;
+  });
+});
+
+// Reopen quick options
+menuBtn.addEventListener("click", () => {
+  quickOptions.style.display =
+    quickOptions.style.display === "flex" ? "none" : "flex";
+});
+</script>
+
+</body>
+</html>

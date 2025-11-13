@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard - NewsSphere</title>
+  <link rel="stylesheet" href="/static/admin_dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .disabled-link {
+      color: gray;
+      pointer-events: none;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .coming-soon {
+      font-size: 12px;
+      color: orange;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li class="{% if request.path == url_for('admin.admin_dashboard_view') %}active{% endif %}">
+        <a href="{{ url_for('admin.admin_dashboard_view') }}">Dashboard</a>
+      </li>
+      <li class="{% if request.path == url_for('admin.admin_panel') %}active{% endif %}">
+        <a href="{{ url_for('admin.admin_panel') }}">Users</a>
+      </li>
+      <li class="{% if request.path == url_for('admin.admin_issues') %}active{% endif %}">
+        <a href="{{ url_for('admin.admin_issues') }}">Reported Issues</a>
+      </li>
+      <li>
+        <a class="disabled-link">Articles</a>
+        <span class="coming-soon">Coming Soon</span>
+      </li>
+      <li>
+        <a class="disabled-link">Settings</a>
+        <span class="coming-soon">Coming Soon</span>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <h1>Admin Dashboard</h1>
+
+    <!-- Cards -->
+    <div class="cards">
+      <div class="card blue">
+        <h3>Total Users</h3>
+        <p>{{ total_users }}</p>
+      </div>
+      <div class="card green">
+        <h3>Total Articles</h3>
+        <p>{{ total_articles }}</p>
+      </div>
+      <div class="card yellow">
+        <h3>Reported Issues</h3>
+        <p>{{ total_reported_issues }}</p>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container">
+      <h3>Monthly User Registrations</h3>
+      <canvas id="userChart" width="400" height="150"></canvas>
+    </div>
+  </main>
+</div>
+
+<!-- Chart.js Script -->
+<script>
+  const ctx = document.getElementById('userChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+      datasets: [{
+        label: 'Users',
+        data: [12, 19, 5, 7, 15, 20, 8], // can be dynamic later
+        backgroundColor: '#007bff'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 }
+        }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

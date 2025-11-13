@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - NewsSphere</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Container for the form */
+.container form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 25px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Input fields */
+.container form input[type="text"],
+.container form input[type="password"] {
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.container form input[type="text"]:focus,
+.container form input[type="password"]:focus {
+  border-color: #d71920;
+  outline: none;
+  box-shadow: 0 0 6px rgba(215, 25, 32, 0.3);
+}
+
+/* Submit button */
+.container form button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #d71920;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.container form button:hover {
+  background-color: #b3151b;
+  transform: scale(1.03);
+}
+
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><a href="/">🗞️ NewsSphere</a></h1>
+</header>
+
+<div class="container" style="max-width: 500px; margin: 40px auto;">
+  <h2>Login</h2>
+
+  {% if error %}
+    <p style="color:red;">{{ error }}</p>
+  {% endif %}
+
+ <form method="POST">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">Login</button>
+</form>
+
+
+
+  <div style="text-align:center; margin-top: 20px;">
+    <p>Don't have an account?</p>
+    <a href="/register" class="btn" style="background-color: #eee; color: #d71920;">Register Now</a>
+  </div>
+
+  <div style="text-align:center; margin-top: 20px;">
+    <p>Are you an admin?</p>
+    <a href="{{ url_for('admin_login') }}" class="btn" style="background-color: #222; color: white;">Admin Login</a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 NewsSphere | Powered by Aditya Pachkor
+</footer>
+
+</body>
+</html>

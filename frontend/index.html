@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsSphere - Trending News</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+  <h1><a href="/">🗞️ NewsSphere</a></h1>
+  <span id="header-user-info">
+    {% if username %}
+      Welcome, {{ username }} | <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+    {% endif %}
+  </span>
+</header>
+
+<!-- Second Navbar -->
+<nav class="second-navbar">
+  <span id="menuToggle" class="menu-icon">☰</span>
+  <a href="/general" onclick="fetchNews('general', this)">Home</a>
+  <a href="/india" onclick="fetchNews('india', this)">India</a>
+  <a href="/world" onclick="fetchNews('world', this)">World</a>
+  <a href="/sports" onclick="fetchNews('sports', this)">Sports</a>
+  <a href="/technology" onclick="fetchNews('technology', this)">Technology</a>
+  <a href="/entertainment" onclick="fetchNews('entertainment', this)">Entertainment</a>
+  <a href="/business" onclick="fetchNews('business', this)">Business</a>
+  <a href="/health" onclick="fetchNews('health', this)">Health</a>
+
+  <form id="search-form" class="nav-search">
+    <input type="text" id="search-input" placeholder="Search news...">
+    <button type="submit">🔍</button>
+  </form>
+
+  <span id="current-date" class="nav-date"></span>
+</nav>
+
+<!-- Sidebar -->
+<div id="sideMenu" class="side-menu">
+  <a href="#" onclick="fetchNews('general', this)">Home</a>
+  <a href="#" onclick="fetchNews('india', this)">India</a>
+  <a href="#" onclick="fetchNews('world', this)">World</a>
+  <a href="#" onclick="fetchNews('sports', this)">Sports</a>
+  <a href="#" onclick="fetchNews('technology', this)">Technology</a>
+  <a href="#" onclick="fetchNews('entertainment', this)">Entertainment</a>
+  <a href="#" onclick="fetchNews('business', this)">Business</a>
+  <a href="#" onclick="fetchNews('health', this)">Health</a>
+    <!-- Activity Button -->
+  {% if session.user %}
+      <a href="{{ url_for('activity.my_activity') }}">My Activity</a>
+  {% else %}
+      <a href="{{ url_for('login', next=url_for('activity.my_activity')) }}">My Activity</a>
+  {% endif %}
+
+  <span id="sidebar-user-info"></span>
+</div>
+
+<!-- Hidden container to save user info for article.html -->
+<div id="user-info" style="display:none;">
+  {% if username %}
+    Welcome, {{ username }} | <a href="/logout">Logout</a>
+  {% else %}
+    <a href="/login">Login</a>
+  {% endif %}
+</div>
+
+<!-- Latest News Ribbon Box -->
+<div class="latest-news-box">
+  <div class="latest-news-ribbon">
+    <div class="latest-news-label">Latest News</div>
+    <span id="latest-news-text">Loading latest news...</span>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div id="overlay" class="overlay"></div>
+
+<div class="container">
+  <div id="news-container" class="news-grid"></div>
+</div>
+<footer>
+  &copy; 2025 NewsSphere | Powered by Aditya Pachkor
+</footer>
+
+<script src="/static/sidebar.js"></script>
+<script src="/static/ribbon.js"></script>
+<script>
+  // Save selected article to localStorage
+  function saveArticle(article) {
+    localStorage.setItem("selectedArticle", JSON.stringify(article));
+  }
+
+  // Handle card click: save, log, redirect
+  async function onCardClick(article) {
+    saveArticle(article);
+
+    // Send article view to backend if user logged in
+    const userId = "{{ session.get('user_id') or '' }}";
+
+    if (userId) {
+      try {
+        await fetch("/log-article-view", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: article.title, url: article.url })
+        });
+      } catch (err) {
+        console.error("Error logging article view:", err);
+      }
+    }
+
+    // Redirect to article page
+    window.location.href = "/article";
+  }
+
+  // Fetch news, populate sidebar and store user info
+  window.onload = () => {
+    const savedCategory = localStorage.getItem('selectedCategory') || 'general';
+    fetchNews(savedCategory);
+
+    // Save user info for article.html
+    const info = document.getElementById('user-info').innerHTML;
+    localStorage.setItem('userInfo', info);
+
+    // Populate sidebar in index.html
+    const sidebarSpan = document.getElementById('sidebar-user-info');
+    sidebarSpan.innerHTML = info;
+  };
+
+  // Fetch news function (unchanged)
+  function fetchNews(category = 'general', btn = null) {
+    localStorage.setItem('selectedCategory', category);
+
+    // Highlight active category
+    document.querySelectorAll('.second-navbar a').forEach(a => a.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else document.querySelectorAll('.second-navbar a').forEach(a => {
+      if (a.innerText.toLowerCase() === category) a.classList.add('active');
+    });
+
+    // Determine API endpoint
+    let endpoint = '/get-news';
+    if (category === 'india') endpoint = '/get-india-news';
+    else if (category === 'world') endpoint = '/get-world-news';
+
+    fetch(`${endpoint}?category=${category}`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("news-container");
+        container.innerHTML = "";
+        const articles = data.articles || data.data || [];
+
+        if (articles.length > 0) {
+          articles.forEach(article => {
+            if (!article.url || !article.title) return;
+            const img = article.urlToImage || article.image || 'https://via.placeholder.com/300x180';
+
+            container.innerHTML += `
+              <div class="news-card" onclick='onCardClick(${JSON.stringify(article).replace(/'/g, "\\'")})' style="cursor: pointer;">
+                <img src="${img}" alt="News">
+                <div class="news-content">
+                  <div class="news-title">${article.title.length > 80 ? article.title.substring(0, 80) + '...' : article.title}</div>
+                  <a class="news-link" href="/article" onclick='event.stopPropagation(); saveArticle(${JSON.stringify(article).replace(/'/g, "\\'")})'>Read more</a>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          container.innerHTML = "<p>No news found.</p>";
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching news:", err);
+        document.getElementById("news-container").innerHTML = "<p>Error loading news.</p>";
+      });
+  }
+  window.onload = () => {
+  // Get saved category or default to 'general'
+  const savedCategory = localStorage.getItem('selectedCategory') || 'general';
+  fetchNews(savedCategory);
+
+  // Highlight default Home link if first visit
+  if (!localStorage.getItem('selectedCategory')) {
+    const homeLink = document.querySelector('.second-navbar a[href="#"]');
+    if (homeLink) homeLink.classList.add('active');
+  }
+
+  // Save user info for article.html
+  const info = document.getElementById('user-info').innerHTML;
+  localStorage.setItem('userInfo', info);
+
+  // Populate sidebar in index.html
+  const sidebarSpan = document.getElementById('sidebar-user-info');
+  sidebarSpan.innerHTML = info;
+
+};
+// Show current date in navbar
+document.addEventListener("DOMContentLoaded", () => {
+  const dateSpan = document.getElementById("current-date");
+  const today = new Date();
+  const options = { weekday: "long", year: "numeric", month: "short", day: "numeric" };
+  dateSpan.textContent = today.toLocaleDateString("en-US", options);
+});
+
+// Handle search
+document.getElementById("search-form").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const query = document.getElementById("search-input").value.trim();
+  if (query) {
+    fetch(`/search-news?query=${encodeURIComponent(query)}`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("news-container");
+        container.innerHTML = "";
+        const articles = data.articles || [];
+
+        if (articles.length > 0) {
+          articles.forEach(article => {
+            if (!article.url || !article.title) return;
+            const img = article.urlToImage || 'https://via.placeholder.com/300x180';
+            container.innerHTML += `
+              <div class="news-card" onclick='onCardClick(${JSON.stringify(article).replace(/'/g, "\\'")})'>
+                <img src="${img}" alt="News">
+                <div class="news-content">
+                  <div class="news-title">${article.title}</div>
+                 <a class="news-link" href="/article?url=${encodeURIComponent(article.url)}" 
+                   onclick='event.stopPropagation(); saveArticle(${JSON.stringify(article).replace(/'/g, "\\'")})'>Read more</a>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          container.innerHTML = "<p>No results found.</p>";
+        }
+      })
+      .catch(err => {
+        console.error("Error searching news:", err);
+      });
+  }
+});
+
+  async function onCardClick(article) {
+    // Save to localStorage if needed (optional)
+    saveArticle(article);
+
+    // Check URL
+    if (!article.url) {
+      alert("❌ No article URL provided");
+      return;
+    }
+
+    // Redirect to /article with query parameters
+    const url = encodeURIComponent(article.url);
+    const title = encodeURIComponent(article.title || "Full Article");
+    const source = encodeURIComponent(article.source?.name || "NewsSphere");
+
+    window.location.href = `/article?url=${url}&title=${title}&source=${source}`;
+  }
+
+</script>
+
+<!-- Floating Assistant Button -->
+<div id="chatbot-toggle">💬</div>
+
+<!-- Chatbot Container (Hidden by Default) -->
+<div id="chatbot-container" class="hidden">
+  <div id="chatbot-header">
+    <h3>NewsSphere Assistant</h3>
+    <button id="chatbot-close">✖</button>
+  </div>
+
+  <div id="chat-messages" class="chat-box">
+    <div class="bot-msg">👋 Hello! I'm your NewsSphere Assistant. How can I help you today?</div>
+  </div>
+
+  <!-- Quick Option Tiles -->
+  <div id="quick-options">
+    <button data-option="report">📢 Report Issue</button>
+    <button data-option="contact">📞 Contact Support</button>
+    <button data-option="help">💡 Help</button>
+    <button data-option="about">ℹ️ About</button>
+  </div>
+
+  <!-- Chat Footer -->
+  <div id="chatbot-footer">
+    <input id="chat-input" type="text" placeholder="Type your message..." />
+    <div id="footer-buttons">
+      <button id="menu-btn" title="Show Quick Options">☰</button>
+    </div>
+    <button id="send-btn">➤</button>
+  </div>
+</div>
+
+<script>
+let chatMode = "normal"; // normal | report_email | report_issue
+let tempEmail = "";
+const toggleBtn = document.getElementById("chatbot-toggle");
+const chatbotContainer = document.getElementById("chatbot-container");
+const closeBtn = document.getElementById("chatbot-close");
+const sendBtn = document.getElementById("send-btn");
+const input = document.getElementById("chat-input");
+const messages = document.getElementById("chat-messages");
+const quickOptions = document.getElementById("quick-options");
+const menuBtn = document.getElementById("menu-btn");
+
+// Helper to append messages
+function appendMessage(sender, text) {
+  const msgDiv = document.createElement("div");
+  msgDiv.className = sender === "user" ? "user-msg" : "bot-msg";
+  msgDiv.textContent = text;
+  messages.appendChild(msgDiv);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// Open chatbot
+toggleBtn.addEventListener("click", () => {
+  chatbotContainer.classList.add("show");
+});
+
+// Close chatbot
+closeBtn.addEventListener("click", () => {
+  chatbotContainer.classList.remove("show");
+});
+
+// Send message handler
+sendBtn.addEventListener("click", async () => {
+  const msg = input.value.trim();
+  if (!msg) return;
+  appendMessage("user", msg);
+  input.value = "";
+
+  // -------- Handle Report Flow --------
+  if (chatMode === "report_email") {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(msg)) {
+      appendMessage("bot", "❌ That doesn’t look like a valid email. Please enter a valid email address (e.g., user@example.com).");
+      return;
+    }
+    tempEmail = msg;
+    appendMessage("bot", "✅ Got it! Now please describe the issue you're facing.");
+    chatMode = "report_issue";
+    return;
+  }
+
+  if (chatMode === "report_issue") {
+    try {
+      const res = await fetch("/report_issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: tempEmail, issue: msg }),
+      });
+      const data = await res.json();
+      appendMessage("bot", "📩 Thanks! Your issue has been submitted to our admin team. We’ll get back to you soon!");
+      chatMode = "normal";
+      tempEmail = "";
+    } catch {
+      appendMessage("bot", "⚠️ Failed to send the report. Please try again later.");
+    }
+    return;
+  }
+
+  // -------- Normal Chat Mode (AI Reply) --------
+  try {
+    const res = await fetch("/chatbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg }),
+    });
+    const data = await res.json();
+    appendMessage("bot", data.reply);
+  } catch {
+    appendMessage("bot", "⚠️ Error connecting to chatbot server.");
+  }
+});
+
+// Quick Option Buttons
+document.querySelectorAll("#quick-options button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const option = btn.dataset.option;
+    appendMessage("user", btn.textContent);
+    quickOptions.style.display = "none";
+
+    if (option === "report") {
+      appendMessage("bot", "📧 Please enter your email address so we can contact you regarding your issue.");
+      chatMode = "report_email";
+    } else if (option === "contact") {
+      appendMessage(
+        "bot",
+        "📬 Need to reach us?\n\n🏢 NewsSphere Support Team\n📧 Email: support@newssphere.com\n🌐 Website: www.newssphere.com\n🕒 Support Hours: Mon–Sat, 9 AM – 7 PM\n\nYou can also report issues here!"
+      );
+    } else if (option === "help") {
+      appendMessage(
+        "bot",
+        "💡 You can ask me about:\n📰 Latest News\n📢 Report Issues\n📞 Contact Support\nℹ️ About NewsSphere\n\nType or select an option!"
+      );
+    } else if (option === "about") {
+      appendMessage(
+        "bot",
+        "ℹ️ I'm the NewsSphere Assistant 🤖 — here to help you with unbiased, AI-powered news and user support."
+      );
+    }
+  });
+});
+
+// Toggle quick menu
+menuBtn.addEventListener("click", () => {
+  quickOptions.style.display =
+    quickOptions.style.display === "flex" ? "none" : "flex";
+});
+</script>
+
+
+</body>
+</html>

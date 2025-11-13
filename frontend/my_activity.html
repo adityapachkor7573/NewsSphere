@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsSphere - My Activity</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .activity-log {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 10px;
+    }
+    .activity-item {
+      border-bottom: 1px solid #ddd;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+    }
+    .activity-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+    .activity-details {
+      flex: 1;
+    }
+    .activity-time {
+      font-size: 12px;
+      color: gray;
+    }
+    .activity-title {
+      font-weight: bold;
+    }
+    .no-activity {
+      text-align: center;
+      padding: 20px;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><a href="/">🗞️ NewsSphere</a></h1>
+  <span id="header-user-info">
+    {% if username %}
+      Welcome, {{ username }} | <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+    {% endif %}
+  </span>
+</header>
+
+<!-- Second Navbar -->
+<nav class="second-navbar">
+  <span id="menuToggle" class="menu-icon">☰</span>
+  <a href="/general">Home</a>
+  <a href="/india">India</a>
+  <a href="/world">World</a>
+  <a href="/sports">Sports</a>
+  <a href="/technology">Technology</a>
+  <a href="/entertainment">Entertainment</a>
+  <a href="/business">Business</a>
+  <a href="/health">Health</a>
+  <a href="{{ url_for('activity.my_activity') }}" class="active">My Activity</a>
+</nav>
+
+<!-- Sidebar -->
+<div id="sideMenu" class="side-menu">
+  <a href="/general">Home</a>
+  <a href="/india">India</a>
+  <a href="/world">World</a>
+  <a href="/sports">Sports</a>
+  <a href="/technology">Technology</a>
+  <a href="/entertainment">Entertainment</a>
+  <a href="/business">Business</a>
+  <a href="/health">Health</a>
+  {% if session.user %}
+      <a href="{{ url_for('activity.my_activity') }}">My Activity</a>
+  {% else %}
+      <a href="{{ url_for('login', next=url_for('activity.my_activity')) }}">My Activity</a>
+  {% endif %}
+</div>
+
+<div class="container">
+  <div class="activity-log">
+    {% if activities %}
+      {% for activity in activities %}
+        <div class="activity-item">
+          <div class="activity-icon">
+            {% if activity.type == "login" %}🔑{% elif activity.type == "logout" %}🚪{% elif activity.type == "view_article" %}📰{% else %}ℹ️{% endif %}
+          </div>
+          <div class="activity-details">
+            <div class="activity-title">
+              {% if activity.type == "login" %}
+                Logged In
+              {% elif activity.type == "logout" %}
+                Logged Out
+              {% elif activity.type == "view_article" %}
+                Viewed Article: {{ activity.details }}
+              {% else %}
+                {{ activity.details }}
+              {% endif %}
+            </div>
+            <div class="activity-time">{{ activity.timestamp }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="no-activity">No activities recorded yet.</div>
+    {% endif %}
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 NewsSphere | Powered by Aditya Pachkor
+</footer>
+
+<script src="/static/sidebar.js"></script>
+</body>
+</html>

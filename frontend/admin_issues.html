@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - Reported Issues - NewsSphere</title>
+  <link rel="stylesheet" href="/static/admin_dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    table th, table td {
+      padding: 12px 15px;
+      text-align: left;
+      vertical-align: top;
+    }
+    table th {
+      background-color: #007bff;
+      color: white;
+    }
+    table tr:nth-child(even) { background-color: #f4f6f9; }
+    table tr:hover { background-color: #d1ecf1; }
+
+    .reply-form button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .reply-form button:hover { background-color: #218838; }
+    .badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: white;
+    }
+    .badge.pending { background-color: #ffc107; color: #212529; }
+    .badge.completed { background-color: #28a745; }
+
+    .disabled-link {
+      color: gray;
+      pointer-events: none;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .coming-soon {
+      font-size: 12px;
+      color: orange;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li class="{% if request.path == url_for('admin.admin_dashboard_view') %}active{% endif %}">
+        <a href="{{ url_for('admin.admin_dashboard_view') }}">Dashboard</a>
+      </li>
+      <li class="{% if request.path == url_for('admin.admin_panel') %}active{% endif %}">
+        <a href="{{ url_for('admin.admin_panel') }}">Users</a>
+      </li>
+      <li class="{% if request.path == url_for('admin.admin_issues') %}active{% endif %}">
+        <a href="{{ url_for('admin.admin_issues') }}">Reported Issues</a>
+      </li>
+      <li>
+        <a class="disabled-link">Articles</a>
+        <span class="coming-soon">Coming Soon</span>
+      </li>
+      <li>
+        <a class="disabled-link">Settings</a>
+        <span class="coming-soon">Coming Soon</span>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <h1>Reported Issues</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Email</th>
+          <th>Issue</th>
+          <th>Status</th>
+          <th>Action</th>
+          <th>Reported On</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for issue in issues %}
+        <tr>
+          <td>{{ issue[0] }}</td>
+          <td>{{ issue[1] }}</td>
+          <td>{{ issue[2] }}</td>
+          <td>
+            {% if issue[4] == "Completed" %}
+              <span class="badge completed">Completed</span>
+            {% else %}
+              <span class="badge pending">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if issue[4] != "Completed" %}
+              <form action="{{ url_for('approve.approve_issue') }}" method="POST" class="reply-form">
+                <input type="hidden" name="issue_id" value="{{ issue[0] }}">
+                <input type="hidden" name="email" value="{{ issue[1] }}">
+                <button type="submit">Approve</button>
+              </form>
+            {% else %}
+              <span>Approved & Notified</span>
+            {% endif %}
+          </td>
+          <td>{{ issue[5] }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" style="text-align:center;">No issues reported yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<!-- Add this at the end of your body -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const approveForms = document.querySelectorAll(".reply-form");
+
+  approveForms.forEach(form => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault(); // prevent form submission
+
+      const issueId = form.querySelector("input[name='issue_id']").value;
+      const email = form.querySelector("input[name='email']").value;
+
+      try {
+        const res = await fetch("{{ url_for('approve.approve_issue') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ issue_id: issueId, email: email }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          // Update UI immediately
+          const row = form.closest("tr");
+          const badge = row.querySelector("td:nth-child(4) .badge");
+          badge.textContent = "Completed";
+          badge.classList.remove("pending");
+          badge.classList.add("completed");
+
+          row.querySelector("td:nth-child(5)").innerHTML = "<span>Approved & Notified</span>";
+
+          alert("Issue approved and email sent!");
+        } else {
+          alert("Failed: " + data.message);
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("Error sending approval request.");
+      }
+    });
+  });
+});
+</script>
+
+
+</body>
+</html>
