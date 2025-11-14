@@ -1,8 +1,8 @@
 flask
 flask-cors 
-sqlite3
 requests
 bs4
 smtplib
 email.mime.text
 deep_translator
+
