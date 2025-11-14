@@ -4,7 +4,6 @@ requests
 bs4
 deep_translator
 gunicorn==21.2.0
-
-
+TextBlob
 
 
