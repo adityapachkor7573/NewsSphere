@@ -2,7 +2,7 @@ flask
 flask-cors 
 requests
 bs4
-smtplib
 email.mime.text
 deep_translator
+
 
