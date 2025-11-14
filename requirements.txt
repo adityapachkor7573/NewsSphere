@@ -3,6 +3,8 @@ flask-cors
 requests
 bs4
 deep_translator
+gunicorn==21.2.0
+
 
 
 
