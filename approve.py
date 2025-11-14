@@ -21,7 +21,7 @@ def approve_issue():
         if not issue_id or not user_email:
             return jsonify({"success": False, "message": "Missing issue ID or email."})
 
-        conn = sqlite3.connect("Data/newssphere.db", check_same_thread=False)
+        conn = sqlite3.connect("Users.db", check_same_thread=False)
         cursor = conn.cursor()
 
         # Fetch issue
@@ -43,10 +43,9 @@ def approve_issue():
         <html>
         <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
             <table style="max-width: 600px; margin: auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <tr style="background-color: #007bff; color: white;">
+                <tr style="background-color: red; color: white;">
                     <td style="padding: 20px; text-align: center;">
-                        <img src="https://i.imgur.com/yourlogo.png" alt="NewsSphere Logo" style="max-width: 120px; margin-bottom: 10px;">
-                        <h2>NewsSphere</h2>
+                        <h2>🗞️ NewsSphere</h2>
                     </td>
                 </tr>
                 <tr>

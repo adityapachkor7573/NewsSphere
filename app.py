@@ -57,6 +57,84 @@ def init_db():
 # --- Email OTP Function ---
 def send_otp_email(recipient, otp):
     try:
+        html_content = f"""
+        <html>
+        <body style="margin:0; padding:0; background:#eef2f7; font-family: 'Segoe UI', sans-serif;">
+
+            <!-- Main Wrapper -->
+            <div style="max-width: 600px; margin: 30px auto; background: #ffffff; 
+                        border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+
+                <!-- Header -->
+                <div style="background: red; 
+                            padding: 25px; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 26px;">NewsSphere</h1>
+                    <p style="color: #dbe9ff; margin-top: 5px; font-size: 14px;">
+                        Intelligent News • Smart Insights
+                    </p>
+                </div>
+
+                <!-- Email Body -->
+                <div style="padding: 25px;">
+
+                    <h2 style="color:#003366; text-align:center; margin-top:0;">
+                        Email Verification Code
+                    </h2>
+
+                    <p style="color:#444; font-size: 15px; line-height: 1.5;">
+                        Hello,<br><br>
+                        Your One-Time Password (OTP) for verifying your NewsSphere account is:
+                    </p>
+
+                    <!-- OTP BOX -->
+                    <div style="text-align:center; margin: 25px 0;">
+                        <div style="display:inline-block; background:red; color:white; 
+                                    padding: 14px 28px; font-size:28px; font-weight:bold; 
+                                    border-radius: 10px; letter-spacing:4px;">
+                            {otp}
+                        </div>
+                    </div>
+
+                    <p style="color:#555; font-size: 14px;">
+                        This OTP is valid for <strong>5 minutes</strong>.  
+                        Please do not share this code with anyone.
+                    </p>
+
+                    <p style="color:#777; font-size: 13px; margin-top: 20px; line-height: 1.4;">
+                        If you did not request this verification, you can safely ignore this email.
+                    </p>
+                </div>
+
+                <!-- Footer -->
+                <div style="background:#f4f6fa; padding: 15px; text-align:center;">
+                    <p style="color:#999; font-size: 13px; margin:0;">
+                        © 2025 NewsSphere • All Rights Reserved
+                    </p>
+                </div>
+
+            </div>
+
+        </body>
+        </html>
+        """
+
+        message = MIMEText(html_content, "html")
+        message['Subject'] = "🔐 Your NewsSphere OTP Verification Code"
+        message['From'] = EMAIL_ADDRESS
+        message['To'] = recipient
+
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        server.sendmail(EMAIL_ADDRESS, recipient, message.as_string())
+        server.quit()
+        return True
+
+    except Exception as e:
+        print("❌ Error sending email:", e)
+        return False
+
+    try:
         message = MIMEText(f"Your OTP is: {otp}")
         message['Subject'] = "Your OTP Verification Code"
         message['From'] = EMAIL_ADDRESS
